@@ -1128,6 +1128,33 @@
                 if (alertClosed) alertClosed.style.display = 'none';
             }
 
+
+            // Poll Profile Pic (Header)
+            var pPic = globalState.profilePic;
+            var header = document.getElementById('app-header');
+            if (!header) header = document.querySelector('.header');
+            if (pPic && header) {
+                var existingPic = document.getElementById('navProfilePic');
+                if (!existingPic) {
+                    existingPic = document.createElement('img');
+                    existingPic.id = 'navProfilePic';
+                    existingPic.style = 'width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid white; margin-left:15px; cursor:pointer;';
+                    var navContainer = header.querySelector('.nav') || header;
+                    navContainer.appendChild(existingPic);
+                }
+                existingPic.src = pPic;
+            } else {
+                var existingPic = document.getElementById('navProfilePic');
+                if (existingPic) existingPic.remove();
+            }
+
+
+            // Dynamic Welcome Name
+            if (globalState.welcomeName) {
+                var wEl = document.getElementById('welcomeName');
+                if (wEl) wEl.innerText = globalState.welcomeName;
+            }
+
             // Chat history
             var history = getSyncItem('chatHistory');
             if (history) {
